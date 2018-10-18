@@ -8,7 +8,6 @@ app.config['SQLALCHEMY_ECHO'] = True
 app.secret_key = 'super_secret_key'
 db = SQLAlchemy(app)
 
-
 class Blog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -18,7 +17,6 @@ class Blog(db.Model):
     def __init__(self, title, body):
         self.title = title
         self.body = body
-
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def newpost():
@@ -36,11 +34,9 @@ def newpost():
             blog_title_error = 'Please include a title.'
             return render_template('/newpost.html', blog_body=blog_body, blog_title_error=blog_title_error)
         
-
         elif blog_body == '':
             blog_body_error = 'Please include some thoughts!'
             return render_template('/newpost.html', blog_title=blog_title, blog_body_error=blog_body_error)
-
 
         else:
             new_blog = Blog(blog_title,blog_body)
@@ -52,7 +48,6 @@ def newpost():
         return redirect('/blog')
 
     return render_template('/newpost.html', a_title = 'Add a Blog', blog_title=blog_title, blog_body=blog_body, blog_title_error=blog_title_error, blog_body_error=blog_body_error)
-
 
 @app.route('/blog')
 def show_blog():
