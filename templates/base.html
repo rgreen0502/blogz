@@ -9,10 +9,31 @@
         </style>
     </head>
 <body>
+
+        <div>
+            <a href='/logout'>Log Out</a>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            <ul>
+            {% for category,message in messages %}
+                <li class="{{category}}">{{message}}</li>
+            {% endfor %}
+            </ul>
+        {% endwith %}
+
     <nav>
-    <a href='/blog'>Main Page</a>
-    <a href='/newpost'>Add a New Blog</a>
+        <a href='/signup'>Signup</a>
+        <a href='/login'>Login</a>
     </nav>
+    <br>
+    <nav>
+        <a href='/'>Home</a>
+        <a href='/blog'>Main Page</a>
+        <a href='/newpost'>Add a New Blog</a>
+    </nav>
+
+
 
 
     {% block content %}
