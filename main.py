@@ -23,28 +23,28 @@ class Blog(db.Model):
 class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True)
+    username = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(120))
     blogs = db.relationship('Blog', backref='owner')
 
-    def __init__(self, email, password):
-        self.email = email
+    def __init__(self, username, password):
+        self.username = username
         self.password = password
 
 @app.before_request
 def require_login():
     allowed_routes = ['login', 'signup', 'show_blog', 'index']
-    if request.endpoint not in allowed_routes and 'email' not in session:
+    if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(username=username).first()
         if user and user.password == password:
-            session['email'] = email
+            session['username'] = username
             return redirect('/blog')
         else:
             flash('User password incorrect, or user does not exist', 'error')
@@ -63,81 +63,69 @@ def char_length(x):
     else:
         return False
 
-def at_symbol(x):
-    if x.count("@") == 1:
-        return True
-    else:
-        return False
-
-def email_period(x):
-    if x.count(".") == 1:
-        return True
-    else:
-        return False
-
 
 @app.route('/signup', methods=["POST", "GET"])
 def signup():
 
     if request.method == 'POST':
 
-        email = request.form["email"]
+        username = request.form["username"]
         password = request.form["password"]
         verify = request.form["verify"]
-        email_error = ""
+        username_error = ""
         password_error = ""
         verify_error = ""
+        existing_user = User.query.filter_by(username=username).first()
+        
 
+        if not empty_field(username):
+            username_error="Please enter a Username."
 
-        if not empty_field(email):
-            email_error="Please enter an Email."
-
-        elif not char_length(email):
-            email_error="Must be between 3 and 20 characters."
-
-        elif not email_period(email):
-            email_error="Can only have one period!"
-
-        elif not at_symbol(email):
-            email_error="Enter a valid email address(with a @)!"
+        elif not char_length(username):
+            username_error="Must be between 3 and 20 characters."
 
         else:
-            if " " in email:
-                email_error="No spaces allowed!"
+            if " " in username:
+                username_error="No spaces allowed!"       
 
         if not empty_field(password):
             password_error="Please enter a Password."
-            email=email
+            username=username
 
         elif not char_length(password):
             password_error="Must be between 3 and 20 characters."
-            email=email
+            username=username
 
         else:
             if " " in password:
                 password_error="No spaces allowed!"
-                email=email
-
+                username=username
         if verify != password:
             verify_error="Passwords must match."
-            email=email
+            username=username
 
-        if not email_error and not password_error and not verify_error:
-            existing_user = User.query.filter_by(email=email).first()
+        if not username_error and not password_error and not verify_error:
+            existing_user = User.query.filter_by(username=username).first()
+               
             if not existing_user:
-                new_user = User(email, password)
+                new_user = User(username, password)
                 db.session.add(new_user)
                 db.session.commit()
-                session['email'] = email
+                session['username'] = username
+
+            else:
+                flash("That username already exists.", "error")
+                return redirect('/signup')
+            
             return redirect('/newpost')
-        return render_template("signup.html", email_error=email_error, email=email, password_error=password_error, password=password, verify=verify, verify_error=verify_error)
+        return render_template("signup.html", username_error=username_error, username=username, password_error=password_error, password=password, verify=verify, verify_error=verify_error)
     else:
         return render_template("signup.html")
         
 @app.route('/logout')
 def logout():
-    del session['email']
-    return redirect('/login')    
+    del session['username']
+    return redirect('/blog')    
                 
 
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -149,7 +137,7 @@ def newpost():
     blog_title_error = ''
     blog_body_error = ''
 
-    owner = User.query.filter_by(email=session['email']).first()
+    owner = User.query.filter_by(username=session['username']).first()
 
     if request.method == 'POST':
         blog_title = request.form['title']
@@ -177,7 +165,7 @@ def newpost():
 @app.route('/blog')
 def show_blog():
 
-    owner = User.query.filter_by(email=session['email']).first()
+    owner = User.query.filter_by(username=session['username']).first()
     blog_id = request.args.get('id')
     if (blog_id):
         post = Blog.query.get(blog_id)
@@ -186,9 +174,10 @@ def show_blog():
         all_blog_posts = Blog.query.filter_by(owner=owner)
         return render_template('blog.html', blogs=all_blog_posts)
 
-@app.route('/')
+@app.route('/', methods = ['POST', 'GET'])
 def index():
-    user_id = request.args.get('id')
+    users = User.query.all()
+    return render_template('index.html', users=users)
     
 
 if __name__ == '__main__':
