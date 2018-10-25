@@ -75,7 +75,7 @@ def signup():
         username_error = ""
         password_error = ""
         verify_error = ""
-        existing_user = User.query.filter_by(username=username).first()
+
         
 
         if not empty_field(username):
@@ -125,7 +125,7 @@ def signup():
 @app.route('/logout')
 def logout():
     del session['username']
-    return redirect('/blog')    
+    return redirect('/login')    
                 
 
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -152,7 +152,7 @@ def newpost():
 
         else:
             new_blog = Blog(blog_title,blog_body,owner)
-            #blogs = Blog.query.filter_by(owner=owner)
+            blogs = Blog.query.filter_by(owner=owner)
             db.session.add(new_blog)
             db.session.commit()
             post_link = "/blog?id=" + str(new_blog.id)
@@ -165,14 +165,20 @@ def newpost():
 @app.route('/blog')
 def show_blog():
 
-    owner = User.query.filter_by(username=session['username']).first()
-    blog_id = request.args.get('id')
-    if (blog_id):
-        post = Blog.query.get(blog_id)
-        return render_template('post.html',blog=post)
+    if "user" in request.args:
+        user_id = request.args.get("user")
+        user = User.query.get(user_id)
+        user_blogs = Blog.query.filter_by(owner=user).all()
+        return render_template("each_user.html", page_title = user.username + "'s Posts!", user_blogs=user_blogs)
+    
+    single_post = request.args.get("id")
+    if single_post:
+        blog = Blog.query.get(single_post)
+        return render_template("post.html", blog=blog)
+
     else:
-        all_blog_posts = Blog.query.filter_by(owner=owner)
-        return render_template('blog.html', blogs=all_blog_posts)
+        blogs = Blog.query.all()
+        return render_template('blog.html', page_title="All Blog Posts!", blogs=blogs)
 
 @app.route('/', methods = ['POST', 'GET'])
 def index():
