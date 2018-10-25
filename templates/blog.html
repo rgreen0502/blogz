@@ -8,7 +8,7 @@
             <li>
                 <h2><a href = "./blog?id={{blog.id}}">{{blog.title}}</a></h2>
                 <p>{{blog.body}}</p>
-                <p><strong>Written By:</strong> <a href="/blog?user={{blog.owner_id}}">{{blog.owner.username}}</a></p>
+                <p><strong>Written By:</strong><a href="/blog?user={{blog.owner_id}}">{{blog.owner.username}}</a></p>
             </li>
             {% endfor %}
         </ol>
